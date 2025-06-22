@@ -1,7 +1,9 @@
 # React + Vite
 ## Project Link
 
-[View the project :](https://subtle-cocada-db48a3.netlify.app/)
+[View the project : ## Project Link
+
+[View the project :](https://subtle-cocada-db48a3.netlify.app/)](https://subtle-cocada-db48a3.netlify.app/)
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
