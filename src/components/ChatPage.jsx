@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import {  MdSend, MdPerson } from "react-icons/md";
+import { MdSend, MdPerson, MdLogout } from "react-icons/md";
 import useChatContext from "../context/ChatContext";
 import { useNavigate } from "react-router";
 import SockJS from "sockjs-client";
@@ -8,6 +8,7 @@ import toast from "react-hot-toast";
 import { baseURL } from "../config/AxiosHelper";
 import { getMessagess } from "../service/RoomService";
 import { timeAgo } from "../config/helper";
+import { motion } from "framer-motion";
 
 const ChatPage = () => {
   const {
@@ -42,7 +43,6 @@ const ChatPage = () => {
     if (connected) loadMessages();
   }, [connected, roomId]);
 
-  // Scroll to last message
   useEffect(() => {
     if (lastMessageRef.current) {
       lastMessageRef.current.scrollIntoView({ behavior: "smooth" });
@@ -90,75 +90,83 @@ const ChatPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-900 text-white">
-      <header className="fixed top-0 left-0 w-full bg-gray-800 border-b border-gray-700 z-10 py-4 px-6 flex justify-between items-center shadow-md">
-        <h1 className="text-lg font-bold">Room: {roomId}</h1>
-        <h1 className="text-lg font-bold">User: {currentUser}</h1>
-        <button
+    <div className="min-h-screen flex flex-col bg-gradient-to-tr from-slate-900 via-gray-900 to-slate-800 text-white">
+      <header className="fixed top-0 left-0 w-full bg-gray-800 bg-opacity-80 backdrop-blur border-b border-gray-700 z-10 py-4 px-6 flex justify-between items-center shadow-xl">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+          <p className="text-white font-medium text-base sm:text-lg">Room: <span className="font-bold">{roomId}</span></p>
+          <p className="text-white font-medium text-base sm:text-lg">User: <span className="font-bold">{currentUser}</span></p>
+        </div>
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
           onClick={handleLogout}
-          className="bg-red-500 hover:bg-red-700 transition-all px-4 py-2 rounded-full text-sm font-medium"
+          className="bg-red-600 hover:bg-red-700 px-4 py-2 text-sm rounded-full flex items-center gap-2"
         >
-          Leave Room
-        </button>
+          <MdLogout /> Leave Room
+        </motion.button>
       </header>
 
       <main
         ref={chatBoxRef}
-        className="pt-20 pb-28 px-6 flex-1 w-full max-w-4xl mx-auto overflow-y-auto border border-gray-600 rounded-md"
+        className="pt-24 pb-32 px-4 sm:px-6 flex-1 w-full max-w-5xl mx-auto overflow-y-auto"
       >
-        {messages.map((message, index) => {
-          const isLast = index === messages.length - 1;
-          return (
-            <div
-              key={index}
-              ref={isLast ? lastMessageRef : null}
-              className={`flex ${
-                message.sender === currentUser
-                  ? "justify-end"
-                  : "justify-start"
-              } mb-4`}
-            >
-              <div
-                className={`flex items-start gap-3 p-3 max-w-xs rounded-xl shadow-md ${
-                  message.sender === currentUser
-                    ? "bg-green-700 text-white"
-                    : "bg-gray-700 text-white"
-                }`}
+        {messages.length === 0 ? (
+          <div className="text-center text-gray-400 mt-20 animate-pulse">
+            No messages yet. Start the conversation 💬
+          </div>
+        ) : (
+          messages.map((message, index) => {
+            const isLast = index === messages.length - 1;
+            const isSelf = message.sender === currentUser;
+            return (
+              <motion.div
+                key={index}
+                ref={isLast ? lastMessageRef : null}
+                className={`flex ${isSelf ? "justify-end" : "justify-start"} mb-4`}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.2, delay: index * 0.02 }}
               >
-                <div className="flex flex-col gap-1">
-                  <div className="flex items-center gap-2">
-                    <MdPerson className="text-xl" />
-                    <p className="text-sm font-semibold">{message.sender}</p>
+                <div
+                  className={`p-4 rounded-2xl max-w-xs sm:max-w-sm shadow-lg border text-white flex flex-col gap-1 ${
+                    isSelf ? "bg-gradient-to-br from-green-500 to-emerald-700" : "bg-gradient-to-br from-blue-500 to-indigo-700"
+                  }`}
+                >
+                  <div className="flex items-center gap-2 text-sm font-semibold">
+                    <MdPerson className="text-lg" /> {message.sender}
                   </div>
-                  <p className="text-sm break-words">{message.content}</p>
-                  <p className="text-xs text-gray-300">
-                    {timeAgo(message.timeStamp)}
-                  </p>
+                  <div className="text-sm break-words">{message.content}</div>
+                  <div className="text-xs text-gray-200">{timeAgo(message.timeStamp)}</div>
                 </div>
-              </div>
-            </div>
-          );
-        })}
+              </motion.div>
+            );
+          })
+        )}
       </main>
 
-      <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 w-full max-w-2xl px-6">
-        <div className="bg-gray-800 rounded-full flex items-center justify-between px-4 py-2 gap-3 shadow-lg border border-gray-700">
+      <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 w-full max-w-3xl px-4">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-slate-800 bg-opacity-90 backdrop-blur rounded-full flex items-center justify-between px-4 py-2 gap-3 shadow-2xl border border-slate-700"
+        >
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && sendMessage()}
             type="text"
             placeholder="Type your message..."
-            className="bg-gray-700 text-white rounded-full flex-1 px-4 py-2 focus:outline-none"
+            className="bg-slate-700 text-white rounded-full flex-1 px-4 py-2 text-sm focus:outline-none placeholder-gray-400"
           />
-         
-          <button
+          <motion.button
+            whileHover={{ scale: 1.15 }}
+            whileTap={{ scale: 0.95 }}
             onClick={sendMessage}
-            className="bg-green-600 hover:bg-green-700 transition p-2 rounded-full"
+            className="bg-gradient-to-br from-green-400 to-emerald-600 p-2 rounded-full text-white"
           >
             <MdSend size={20} />
-          </button>
-        </div>
+          </motion.button>
+        </motion.div>
       </div>
     </div>
   );
